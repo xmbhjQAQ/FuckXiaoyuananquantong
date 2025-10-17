@@ -1,0 +1,2 @@
+# FuckXiaoyuananquantong
+跳过校园安全通30秒限制和视频播放限制，自动化校园安全通答题
