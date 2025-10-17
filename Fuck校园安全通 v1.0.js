@@ -14,7 +14,7 @@
 // @connect      api.groq.com
 // @connect      api.moonshot.cn
 // @connect      dash.cloudflare.com
-// @connect      ams.nagisa.icu
+// @connect      ************* //这里换成你的endpoint的域名
 // @connect      *
 // @require      https://code.jquery.com/jquery-3.6.0.min.js
 // ==/UserScript==
