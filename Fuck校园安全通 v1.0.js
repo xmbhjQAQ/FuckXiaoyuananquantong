@@ -5,7 +5,9 @@
 // @description  一个脚本即可完美兼容“章节测试”、“模拟考试”和“消除错题”,自动跳过硬控，AI答题。
 // @author       QAQ
 // @match        *://wap.xiaoyuananquantong.com/guns-vip-main/wap/article*
+// @match        *://wap.xiaoyuananquantong.com/guns-vip-main/wap/newStudentArticle*
 // @match        *://wap.xiaoyuananquantong.com/guns-vip-main/wap/simulate*
+// @match        *://wap.xiaoyuananquantong.com/guns-vip-main/wap/newStudentssimulate*
 // @match        *://wap.xiaoyuananquantong.com/guns-vip-main/wap/clearWrong*
 // @run-at       document-start
 // @grant        GM_xmlhttpRequest
@@ -26,24 +28,15 @@
     console.log('【 Fuck校园安全通】: 脚本启动');
 
     // Part 1: [仅在 article 页面运行] 破解图片翻页的时间限制
-    if (window.location.href.includes('/article')) {
-        const observer = new MutationObserver((mutations) => {
-            for (const mutation of mutations) {
-                for (const node of mutation.addedNodes) {
-                    if (node.tagName === 'SCRIPT' && node.innerHTML.includes('if(timeSpent < 30)')) {
-                        console.log('【 Fuck校园安全通 DBG】: Part 1 - 破解图片翻页计时器');
-                        const newScript = document.createElement('script');
-                        newScript.innerHTML = node.innerHTML.replace('if(timeSpent < 30)', 'if(timeSpent < 0)');
-                        node.parentNode.replaceChild(newScript, node);
-                        observer.disconnect();
-                        return;
-                    }
-                }
-            }
-        });
-        observer.observe(document, { childList: true, subtree: true });
+    // 修复：覆写 setTimeout/setInterval，将30秒延迟降为0
+    // 注意：必须用 unsafeWindow，因为 @grant 模式下 window 是沙箱代理
+    if (window.location.href.toLowerCase().includes('article')) {
+        const _st = unsafeWindow.setTimeout.bind(unsafeWindow);
+        unsafeWindow.setTimeout = (fn, d, ...a) => _st(fn, d === 30000 ? 0 : d, ...a);
+        const _si = unsafeWindow.setInterval.bind(unsafeWindow);
+        unsafeWindow.setInterval = (fn, d, ...a) => _si(fn, d === 30000 ? 0 : d, ...a);
     }
-
+    
     // Part 2: 主要功能模块
     $(function() {
         console.log('【 Fuck校园安全通 DBG】: Part 2 - DOM加载完成');
@@ -58,10 +51,10 @@
         let pageType = '未知';
         let questionSelector = '';
 
-        if (href.includes('/article')) {
+        if (href.toLowerCase().includes('article')) {
             pageType = '章节测试';
             questionSelector = '#dataList ul li';
-        } else if (href.includes('/simulate')) {
+        } else if (href.toLowerCase().includes('simulate')) {
             pageType = '模拟考试';
             questionSelector = '.minirefresh-scroll ul li';
         } else if (href.includes('/clearWrong')) {
@@ -72,7 +65,7 @@
 
 
         // 仅在“章节测试”页面执行自动跳转
-        if (href.includes('/article')) {
+        if (href.toLowerCase().includes('article')) {
             robustAutoSkip();
         }
 
